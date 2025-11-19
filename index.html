@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Boutique de Vêtements</title>
+  <!-- Styles simples -->
+  <style>
+    :root { --bg: #f7f7f7; --card: #fff; --accent: #111; --radius: 10px; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 0;
+      background: var(--bg);
+      color: #222;
+      direction: ltr;
+    }
+    header {
+      background: var(--accent);
+      color: white;
+      padding: 16px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      overflow: hidden;
+      text-align: center;
+      padding-bottom: 16px;
+    }
+    .card img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      display: block;
+    }
+    .card h3 { margin: 12px 12px 6px; font-size: 18px; }
+    .card p.price { margin: 0; font-weight: 700; }
+    .card button {
+      margin-top: 12px;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: rgb(245, 245, 245);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* Barre du panier simple en haut à droite */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+    }
+    .cart {
+      background: #ffffff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .cart .count {
+      background: #fafafa;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 520px) {
+      .card img { height: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <header>Boutique de Vêtements</header>
+
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <!-- Petit slogan -->
+        <strong>Nouvelle collection — Livraison disponible</strong>
+      </div>
+      <div class="cart" id="cartButton" title="Voir le panier">
+        🛒 <span id="cartCount" class="count">0</span>
+      </div>
+    </div>
+
+    <!-- Liste de produits -->
+    <section class="products" id="products">
+      <!-- Les produits seront insérés ici par JavaScript -->
+    </section>
+  </div>
+
+  <!-- Script: données de produit simples et panier local -->
+  <script>
+    // Liste d'exemples de produits (objet simple)
+    const products = [
+      { id: 1, name: "Jacket ", price: 149, currency: "MAD", image: "https://i.pinimg.com/736x/9b/f7/48/9bf748a93d025acb4656e92b4afe60fb.jpg"},
+      { id: 2, name: "Jacket noir",    price: 140, currency: "MAD", image: "https://i.pinimg.com/736x/9b/f7/48/9bf748a93d025acb4656e92b4afe60fb.jpg" },
+      { id: 3, name: "Jean Moderne",  price: 199, currency: "MAD", image: "https://i.pinimg.com/736x/9b/f7/48/9bf748a93d025acb4656e92b4afe60fb.jpg" }
+    ];
+
+    // Panier simple en mémoire (session)
+    let cart = [];
+
+    // Référence DOM
+    const productsEl = document.getElementById('products');
+    const cartCountEl = document.getElementById('cartCount');
+    const cartButton = document.getElementById('cartButton');
+
+    // Fonction pour afficher les produits
+    function renderProducts() {
+      productsEl.innerHTML = '';
+      products.forEach(p => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${p.image}" alt="${p.name}">
+          <h3>${p.name}</h3>
+          <p class="price">${p.price} ${p.currency}</p>
+          <button data-id="${p.id}">Ajouter au panier</button>
+        `;
+        productsEl.appendChild(card);
+      });
+      // Attacher listeners aux boutons
+      document.querySelectorAll('.card button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = Number(btn.getAttribute('data-id'));
+          addToCart(id);
+        });
+      });
+    }
+
+    // Ajouter produit au panier
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+      const item = cart.find(i => i.id === productId);
+      if (item) {
+        item.qty += 1;
+      } else {
+        cart.push({ id: product.id, name: product.name, price: product.price, currency: product.currency, qty: 1 });
+      }
+      updateCartUI();
+      // Petite confirmation
+      alert(product.name + " ajouté au panier.");
+    }
+
+    // Mettre à jour l'affichage du panier
+    function updateCartUI() {
+      const totalQty = cart.reduce((s, i) => s + i.qty, 0);
+      cartCountEl.textContent = totalQty;
+    }
+
+    // Afficher le contenu du panier (simple modal via alert)
+    function showCart() {
+      if (cart.length === 0) {
+        alert("Votre panier est vide.");
+        return;
+      }
+      let text = "Contenu du panier:\\n\\n";
+      let total = 0;
+      cart.forEach(i => {
+        text += `${i.name} — ${i.qty} × ${i.price} ${i.currency} = ${i.qty * i.price} ${i.currency}\\n`;
+        total += i.qty * i.price;
+      });
+      text += "\\nTotal: " + total + " MAD";
+      alert(text);
+    }
+
+    // Initialisation
+    renderProducts();
+    cartButton.addEventListener('click', showCart);
+  </script>
+</body>
+</html>
+<!DOCTYPE html><html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title></title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background: #f7f7f7;
+    }
+    header {
+      background: #111;
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+    }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .card img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    .card h3 {
+      margin: 10px 0 5px;
+    }
+    .card button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+ <!DOCTYPE html><html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title></title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background: #f7f7f7;
+    }
+    header {
+      background: #111;
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+    }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .card img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    .card h3 {
+      margin: 10px 0 5px;
+    }
+    .card button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head></header>
+  <section class="products">
+    <div class="card">
+      <img src="https://i.pinimg.com/736x/9b/f7/48/9bf748a93d025acb4656e92b4afe60fb.jpg" />
+      <h3></h3>
+      <p>600
+         MAD</p>
+      <button>Ajouter au panier</button>
+    </div><div class="card">
+  <img src="https://i.pinimg.com/736x/9b/f7/48/9bf748a93d025acb4656e92b4afe60fb.jpg" />
+  <h3></h3>
+  <p>160 MAD</p>
+  <button>Ajouter au panier</button>
+</div>
+
+<div class="card">
+  <img src="https://i.pinimg.com/736x/9b/f7/48/9bf748a93d025acb4656e92b4afe60fb.jpg" />
+  <h3> </h3>
+  <p>140 MAD</p>
+  <button>Ajouter au panier</button>
+</div>
+
+  </section>
+  <!-- contact us   /  request a product -->
+  <section style="background:#fff; padding:20px; margin:20px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+    <h2 style="text-align:center;"> contact us  / request a product </h2>
+    <form action="mailto:abdnorbasraoui@gmail.com" method="POST" enctype="text/plain" style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+      <input type="text" name="name" placeholder="Full Name " required style="padding:10px; border-radius:8px; border:1px solid #ccc;">
+      <input type="tel" name="phone" placeholder=" Phone Numper" required style="padding:10px; border-radius:8px; border:1px solid #ccc;">
+      <input type="text" name="product" placeholder=" Product Name" required style="padding:10px; border-radius:8px; border:1px solid #ccc;">
+      <textarea name="message" placeholder=" Additional Notes" rows="4" style="padding:10px; border-radius:8px; border:1px solid #ccc;"></textarea>
+      <button type="submit" style="padding:12px; background:#111; color:#fff; border:none; border-radius:8px; cursor:pointer;"> Send the Request</button>
+    </form>
+  </section></body>
+</html>
